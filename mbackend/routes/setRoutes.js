@@ -104,14 +104,117 @@
 
 
 
-const express = require('express');
-const Set = require('../models/Set'); // Import Set model
-const authenticateUser = require('../middleware/authMiddleware'); // Import authentication middleware
+// const express = require('express');
+// const Set = require('../models/Set'); // Import Set model
+// const authenticateUser = require('../middleware/authMiddleware'); // Import authentication middleware
 
-const router = express.Router();
+// const router = express.Router();
 
-// Fetch set details based on setNumber
-// router.get('/fetchSetDetails', authenticateUser, async (req, res) => {
+// // Fetch set details based on setNumber
+// // router.get('/fetchSetDetails', authenticateUser, async (req, res) => {
+// //   const { setNumber } = req.query;
+
+// //   if (!setNumber) {
+// //     return res.status(400).json({ error: 'Set number is required' });
+// //   }
+
+// //   try {
+// //     // Fetching set details from MongoDB
+// //     const setData = await Set.findOne({ 'sets.setNumber': setNumber });
+
+// //     if (!setData) {
+// //       return res.status(404).json({ error: 'Set not found' });
+// //     }
+
+// //     // Find the set details using the set number
+// //     const setDetails = setData.sets.find(set => set.setNumber === parseInt(setNumber));
+
+// //     if (!setDetails) {
+// //       return res.status(404).json({ error: 'Set details not found' });
+// //     }
+
+// //     res.json({ sets: [setDetails] }); // Sending the fetched set details
+// //   } catch (error) {
+// //     console.error('Error fetching set details:', error);
+// //     res.status(500).json({ error: 'Server error' });
+// //   }
+// // });
+
+// // setRoutes.js
+// router.get('/fetchSetDetails', async (req, res) => {
+//   const { setNumber } = req.query;
+
+//   if (!setNumber) {
+//     return res.status(400).json({ error: 'Set number is required' });
+//   }
+
+//   try {
+//     const setData = await Set.findOne({ "sets.setNumber": setNumber });
+//     if (!setData) {
+//       return res.status(404).json({ error: 'Set not found' });
+//     }
+//     const setDetails = setData.sets.find(set => set.setNumber == setNumber);
+//     if (!setDetails) {
+//       return res.status(404).json({ error: 'Set details not found' });
+//     }
+//     res.json({ sets: [setDetails] });
+//   } catch (error) {
+//     console.error('Error fetching set details:', error);
+//     res.status(500).json({ error: 'Server error' });
+//   }
+// });
+
+
+// // Route to store sets data
+// router.post('/add', authenticateUser, async (req, res) => {
+//   const { sets } = req.body;
+
+//   try {
+//     // Create a new Set document for the logged-in user
+//     const newSet = new Set({
+//       user: req.user._id, // Reference to the logged-in user
+//       sets: sets, // The sets data sent from the frontend
+//     });
+
+//     // Save the new set data in the database
+//     await newSet.save();
+
+//     res.status(201).json({ message: 'Sets stored successfully!' });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ message: 'Error storing sets data' });
+//   }
+// });
+
+// module.exports = router;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// const express = require('express');
+// const Set = require('../models/Set'); // Import Set model
+// const authenticateUser = require('../middleware/authMiddleware'); // Import authentication middleware
+
+// const router = express.Router();
+
+// // Route to fetch set details based on setNumber
+// router.get('/fetchSetDetails', async (req, res) => {
 //   const { setNumber } = req.query;
 
 //   if (!setNumber) {
@@ -120,14 +223,14 @@ const router = express.Router();
 
 //   try {
 //     // Fetching set details from MongoDB
-//     const setData = await Set.findOne({ 'sets.setNumber': setNumber });
+//     const setData = await Set.findOne({ "sets.setNumber": setNumber });
 
 //     if (!setData) {
 //       return res.status(404).json({ error: 'Set not found' });
 //     }
 
 //     // Find the set details using the set number
-//     const setDetails = setData.sets.find(set => set.setNumber === parseInt(setNumber));
+//     const setDetails = setData.sets.find(set => set.setNumber == setNumber);
 
 //     if (!setDetails) {
 //       return res.status(404).json({ error: 'Set details not found' });
@@ -140,7 +243,61 @@ const router = express.Router();
 //   }
 // });
 
+// // Route to store sets data
+// router.post('/add', authenticateUser, async (req, res) => {
+//   const { sets } = req.body;
+
+//   if (!sets || sets.length === 0) {
+//     return res.status(400).json({ error: 'Sets data is required' });
+//   }
+
+//   try {
+//     // Create a new Set document for the logged-in user
+//     const newSet = new Set({
+//       user: req.user._id, // Reference to the logged-in user
+//       sets: sets, // The sets data sent from the frontend
+//     });
+
+//     // Save the new set data in the database
+//     await newSet.save();
+
+//     res.status(201).json({ message: 'Sets stored successfully!' });
+//   } catch (error) {
+//     console.error('Error storing sets:', error);
+//     res.status(500).json({ message: 'Error storing sets data' });
+//   }
+// });
+
+// module.exports = router;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // setRoutes.js
+
+const express = require('express');
+const Set = require('../models/Set');
+const authenticateUser = require('../middleware/authMiddleware'); // Authentication middleware
+const router = express.Router();
+
+// Fetch set details based on setNumber
 router.get('/fetchSetDetails', async (req, res) => {
   const { setNumber } = req.query;
 
@@ -153,10 +310,12 @@ router.get('/fetchSetDetails', async (req, res) => {
     if (!setData) {
       return res.status(404).json({ error: 'Set not found' });
     }
+
     const setDetails = setData.sets.find(set => set.setNumber == setNumber);
     if (!setDetails) {
       return res.status(404).json({ error: 'Set details not found' });
     }
+
     res.json({ sets: [setDetails] });
   } catch (error) {
     console.error('Error fetching set details:', error);
@@ -164,24 +323,20 @@ router.get('/fetchSetDetails', async (req, res) => {
   }
 });
 
-
-// Route to store sets data
+// Route to store sets data (requires authentication)
 router.post('/add', authenticateUser, async (req, res) => {
   const { sets } = req.body;
 
   try {
-    // Create a new Set document for the logged-in user
     const newSet = new Set({
       user: req.user._id, // Reference to the logged-in user
       sets: sets, // The sets data sent from the frontend
     });
 
-    // Save the new set data in the database
     await newSet.save();
-
     res.status(201).json({ message: 'Sets stored successfully!' });
   } catch (error) {
-    console.error(error);
+    console.error('Error storing sets:', error);
     res.status(500).json({ message: 'Error storing sets data' });
   }
 });

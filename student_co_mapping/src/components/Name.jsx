@@ -2421,6 +2421,316 @@
 
 
 
+//->sucess
+
+
+// import React, { useState, useEffect } from "react";
+// import { useLocation } from "react-router-dom";
+// import { generateRollNumbers } from "./rollNumberHelper";
+// import { debounce } from "lodash";
+// import jsPDF from "jspdf";
+// import "jspdf-autotable";
+// import * as XLSX from "xlsx";
+
+// function Name() {
+//   const location = useLocation();
+//   const { academicYear = "", Branch = "", Section = "" } = location.state || {};
+
+//   if (!academicYear || !Branch || !Section) {
+//     return <h1 className="text-center text-xl mt-10">Invalid Data</h1>;
+//   }
+
+//   const rollNumbers = generateRollNumbers(academicYear, Branch, Section);
+//   const [setNumbers, setSetNumbers] = useState({});
+//   const [marks, setMarks] = useState({});
+//   const [setDetails, setSetDetails] = useState({});
+
+//   // Update the marks when the input changes
+//   const handleMarksChange = (rollNumber, field, value) => {
+//     setMarks((prev) => ({
+//       ...prev,
+//       [rollNumber]: {
+//         ...prev[rollNumber],
+//         [field]: value,
+//       },
+//     }));
+//   };
+
+//   // Fetch the set details from the server when setNumber or rollNumber changes
+//   const fetchSetDetailsDebounced = debounce(async (setNum, rollNumber) => {
+//     const token = localStorage.getItem("token");
+//     if (!token) {
+//       alert("You are not authenticated. Please login.");
+//       return;
+//     }
+
+//     try {
+//       const response = await fetch(
+//         `http://localhost:5000/api/sets/fetchSetDetails?setNumber=${setNum}`,
+//         {
+//           method: "GET",
+//           headers: {
+//             Authorization: `Bearer ${token}`,
+//           },
+//         }
+//       );
+
+//       const data = await response.json();
+//       console.log(data);
+//       if (response.ok) {
+//         const setData = data.sets.find((set) => set.setNumber === setNum);
+//         if (setData) {
+//           // Divide questions into Program 1 (CO1) and Program 2 (CO2)
+//           const dividedQuestions = {
+//             program1: setData.questions?.slice(0, setData.questions?.length / 2),
+//             program2: setData.questions?.slice(setData.questions?.length / 2),
+//             co1: setData.coNumbers?.slice(0, setData.coNumbers?.length / 2),
+//             co2: setData.coNumbers?.slice(setData.coNumbers?.length / 2),
+//           };
+//           setSetDetails((prev) => ({ ...prev, [rollNumber]: dividedQuestions }));
+//         } else {
+//           alert("Set number not found.");
+//         }
+//       } else {
+//         alert("No set details found for the given set number.");
+//       }
+//     } catch (error) {
+//       console.error("Error fetching set details:", error);
+//     }
+//   }, 500);
+
+//   // Effect hook to fetch set details whenever setNumbers change
+//   useEffect(() => {
+//     if (Object.keys(setNumbers).length) {
+//       Object.entries(setNumbers).forEach(([rollNumber, setNum]) => {
+//         fetchSetDetailsDebounced(setNum, rollNumber);
+//       });
+//     }
+//   }, [setNumbers]);
+
+//   // Handle changes in the set number for each roll number
+//   const handleSetNumberChange = (rollNumber, value) => {
+//     setSetNumbers((prev) => ({ ...prev, [rollNumber]: value }));
+//   };
+
+//   // Calculate total marks for each student
+//   const calculateTotalMarks = (rollNumber) => {
+//     const studentMarks = marks[rollNumber] || {};
+
+//     // Parse marks or set to 0 if empty or invalid
+//     const writeUp = parseInt(studentMarks.writeUp) || 0;
+//     const compileErrors = parseInt(studentMarks.compileErrors) || 0;
+//     const execution = parseInt(studentMarks.execution) || 0;
+//     const programSyntax = parseInt(studentMarks.programSyntax) || 0;
+//     const vivaVoice = parseInt(studentMarks.vivaVoice) || 0;
+
+//     // Calculate total marks by adding all fields
+//     return writeUp + compileErrors + execution + programSyntax + vivaVoice;
+//   };
+
+//   // Download PDF function
+//   const downloadPDF = () => {
+//     const doc = new jsPDF();
+
+//     // Set table headers
+//     const headers = [
+//       ["S. No.", "Set No.", "Hall Ticket", "Program 1 Executed", "Mapping CO 1", "Write Up (10M)", "Compile Errors (15M)", "Execution (15M)", "Program 2 Executed", "Mapping CO 2", "Program & Syntax (10M)", "Viva-Voice (10M)", "Total Marks (60M)"],
+//     ];
+
+//     // Format data for the table
+//     const data = rollNumbers.map((rollNumber, index) => {
+//       return [
+//         index + 1,
+//         setNumbers[rollNumber] || "",
+//         rollNumber,
+//         setDetails[rollNumber]?.program1?.join(", ") || "-",
+//         setDetails[rollNumber]?.co1?.join(", ") || "-",
+//         marks[rollNumber]?.writeUp || "",
+//         marks[rollNumber]?.compileErrors || "",
+//         marks[rollNumber]?.execution || "",
+//         setDetails[rollNumber]?.program2?.join(", ") || "-",
+//         setDetails[rollNumber]?.co2?.join(", ") || "-",
+//         marks[rollNumber]?.programSyntax || "",
+//         marks[rollNumber]?.vivaVoice || "",
+//         calculateTotalMarks(rollNumber),
+//       ];
+//     });
+
+//     // Add the table to the PDF
+//     doc.autoTable({
+//       head: headers,
+//       body: data,
+//     });
+
+//     // Save the PDF
+//     doc.save("marksheet.pdf");
+//   };
+
+//   // Download Excel function
+//   const downloadExcel = () => {
+//     const data = rollNumbers.map((rollNumber, index) => {
+//       return {
+//         "S. No.": index + 1,
+//         "Set No.": setNumbers[rollNumber] || "",
+//         "Hall Ticket": rollNumber,
+//         "Program 1 Executed": setDetails[rollNumber]?.program1?.join(", ") || "-",
+//         "Mapping CO 1": setDetails[rollNumber]?.co1?.join(", ") || "-",
+//         "Write Up (10M)": marks[rollNumber]?.writeUp || "",
+//         "Compile Errors (15M)": marks[rollNumber]?.compileErrors || "",
+//         "Execution (15M)": marks[rollNumber]?.execution || "",
+//         "Program 2 Executed": setDetails[rollNumber]?.program2?.join(", ") || "-",
+//         "Mapping CO 2": setDetails[rollNumber]?.co2?.join(", ") || "-",
+//         "Program & Syntax (10M)": marks[rollNumber]?.programSyntax || "",
+//         "Viva-Voice (10M)": marks[rollNumber]?.vivaVoice || "",
+//         "Total Marks (60M)": calculateTotalMarks(rollNumber),
+//       };
+//     });
+
+//     const ws = XLSX.utils.json_to_sheet(data);
+//     const wb = XLSX.utils.book_new();
+//     XLSX.utils.book_append_sheet(wb, ws, "Marks Data");
+//     XLSX.writeFile(wb, "marksheet.xlsx");
+//   };
+
+//   return (
+//     <div className="p-6">
+//       <h1 className="text-2xl font-bold text-center mb-4 underline">AWARD LIST (LABORATORY)</h1>
+//       <p className="text-center mb-4">
+//         <strong>Academic Year:</strong> {academicYear} | <strong>Branch:</strong> {Branch} | <strong>Section:</strong> {Section}
+//       </p>
+
+//       <div className="overflow-x-auto">
+//         <table className="w-full text-sm border-collapse border border-gray-300 mt-6">
+//           <thead>
+//             <tr className="bg-gray-200">
+//               <th className="border border-gray-300 p-1">S. No.</th>
+//               <th className="border border-gray-300 p-1">Set No.</th>
+//               <th className="border border-gray-300 p-1">Hall Ticket</th>
+//               <th className="border border-gray-300 p-1">Program 1 Executed</th>
+//               <th className="border border-gray-300 p-1">Mapping CO 1</th>
+//               <th className="border border-gray-300 p-1">Write Up (10M)</th>
+//               <th className="border border-gray-300 p-1">Compile Errors (15M)</th>
+//               <th className="border border-gray-300 p-1">Execution (15M)</th>
+//               <th className="border border-gray-300 p-1">Program 2 Executed</th>
+//               <th className="border border-gray-300 p-1">Mapping CO 2</th>
+//               <th className="border border-gray-300 p-1">Program & Syntax (10M)</th>
+//               <th className="border border-gray-300 p-1">Viva-Voice (10M)</th>
+//               <th className="border border-gray-300 p-1">Total Marks (60M)</th>
+//             </tr>
+//           </thead>
+//           <tbody>
+//             {rollNumbers.map((rollNumber, index) => (
+//               <tr key={index}>
+//                 <td className="border border-gray-300 p-1 text-center">{index + 1}</td>
+//                 <td className="border border-gray-300 p-1">
+//                   <input
+//                     type="number"
+//                     className="w-full border-none outline-none text-sm"
+//                     value={setNumbers[rollNumber] || ""}
+//                     onChange={(e) => handleSetNumberChange(rollNumber, e.target.value)}
+//                   />
+//                 </td>
+//                 <td className="border border-gray-300 p-1 text-center">{rollNumber}</td>
+//                 <td className="border border-gray-300 p-1">
+//                   {setDetails[rollNumber]?.program1?.join(", ") || "-"}
+//                 </td>
+//                 <td className="border border-gray-300 p-1">
+//                   {setDetails[rollNumber]?.co1?.join(", ") || "-"}
+//                 </td>
+//                 <td className="border border-gray-300 p-1">
+//                   <input
+//                     type="number"
+//                     className="w-full border-none outline-none text-sm"
+//                     value={marks[rollNumber]?.writeUp || ""}
+//                     onChange={(e) => handleMarksChange(rollNumber, "writeUp", e.target.value)}
+//                   />
+//                 </td>
+//                 <td className="border border-gray-300 p-1">
+//                   <input
+//                     type="number"
+//                     className="w-full border-none outline-none text-sm"
+//                     value={marks[rollNumber]?.compileErrors || ""}
+//                     onChange={(e) => handleMarksChange(rollNumber, "compileErrors", e.target.value)}
+//                   />
+//                 </td>
+//                 <td className="border border-gray-300 p-1">
+//                   <input
+//                     type="number"
+//                     className="w-full border-none outline-none text-sm"
+//                     value={marks[rollNumber]?.execution || ""}
+//                     onChange={(e) => handleMarksChange(rollNumber, "execution", e.target.value)}
+//                   />
+//                 </td>
+//                 <td className="border border-gray-300 p-1">
+//                   {setDetails[rollNumber]?.program2?.join(", ") || "-"} {/* Program 2 Executed */}
+//                 </td>
+//                 <td className="border border-gray-300 p-1">
+//                   {setDetails[rollNumber]?.co2?.join(", ") || "-"} {/* CO Mapping 2 */}
+//                 </td>
+//                 <td className="border border-gray-300 p-1">
+//                   <input
+//                     type="number"
+//                     className="w-full border-none outline-none text-sm"
+//                     value={marks[rollNumber]?.programSyntax || ""}
+//                     onChange={(e) => handleMarksChange(rollNumber, "programSyntax", e.target.value)}
+//                   />
+//                 </td>
+//                 <td className="border border-gray-300 p-1">
+//                   <input
+//                     type="number"
+//                     className="w-full border-none outline-none text-sm"
+//                     value={marks[rollNumber]?.vivaVoice || ""}
+//                     onChange={(e) => handleMarksChange(rollNumber, "vivaVoice", e.target.value)}
+//                   />
+//                 </td>
+//                 <td className="border border-gray-300 p-1 text-center">
+//                   {calculateTotalMarks(rollNumber)}
+//                 </td>
+//               </tr>
+//             ))}
+//           </tbody>
+//         </table>
+//       </div>
+
+//       <div className="flex justify-center mt-6">
+//         <button
+//           onClick={downloadPDF}
+//           className="bg-blue-500 text-white p-2 rounded-md mr-4"
+//         >
+//           Download PDF
+//         </button>
+//         <button
+//           onClick={downloadExcel}
+//           className="bg-green-500 text-white p-2 rounded-md"
+//         >
+//           Download Excel
+//         </button>
+//       </div>
+//     </div>
+//   );
+// }
+
+// export default Name;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2476,18 +2786,21 @@ function Name() {
       );
 
       const data = await response.json();
-
+      console.log(data); // Debugging the data structure
       if (response.ok) {
-        const setData = data.sets.find((set) => set.setNumber === setNum);
+        const setData = data.sets[0];  // Accessing the first object in the sets array
         if (setData) {
           // Divide questions into Program 1 (CO1) and Program 2 (CO2)
           const dividedQuestions = {
-            program1: setData.questions?.slice(0, setData.questions?.length / 2),
-            program2: setData.questions?.slice(setData.questions?.length / 2),
-            co1: setData.coNumbers?.slice(0, setData.coNumbers?.length / 2),
-            co2: setData.coNumbers?.slice(setData.coNumbers?.length / 2),
+            program1: setData.questions?.slice(0, setData.questions.length / 2),
+            program2: setData.questions?.slice(setData.questions.length / 2),
+            co1: setData.coNumbers?.slice(0, setData.coNumbers.length / 2),
+            co2: setData.coNumbers?.slice(setData.coNumbers.length / 2),
           };
-          setSetDetails((prev) => ({ ...prev, [rollNumber]: dividedQuestions }));
+          setSetDetails((prev) => ({
+            ...prev,
+            [rollNumber]: dividedQuestions,
+          }));
         } else {
           alert("Set number not found.");
         }
@@ -2594,7 +2907,7 @@ function Name() {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold text-center mb-4">Generated Roll Numbers</h1>
+      <h1 className="text-2xl font-bold text-center mb-4 underline">AWARD LIST (LABORATORY)</h1>
       <p className="text-center mb-4">
         <strong>Academic Year:</strong> {academicYear} | <strong>Branch:</strong> {Branch} | <strong>Section:</strong> {Section}
       </p>
@@ -2711,8 +3024,6 @@ function Name() {
 }
 
 export default Name;
-
-
 
 
 
